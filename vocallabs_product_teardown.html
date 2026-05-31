@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocallabs.ai — Product Teardown 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a35;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent3: #00d4aa;
+    --accent4: #ffd93d;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --card: #14141c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 32px; gap: 0; overflow-x: auto;
+  }
+  nav .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 15px;
+    color: var(--accent); white-space: nowrap;
+    padding: 18px 0; margin-right: 32px;
+    letter-spacing: -0.5px;
+  }
+  nav button {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 12px; padding: 18px 16px;
+    white-space: nowrap; transition: color .2s;
+    border-bottom: 2px solid transparent;
+    letter-spacing: 0.5px;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── SECTIONS ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 48px 60px;
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(108,99,255,0.15);
+    border: 1px solid rgba(108,99,255,0.4);
+    color: var(--accent); font-size: 11px;
+    padding: 4px 12px; border-radius: 2px;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -2px; margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--accent); font-style: italic; font-family: 'Instrument Serif'; }
+  .hero-sub {
+    color: var(--muted); font-size: 13px;
+    max-width: 600px; margin-bottom: 40px;
+  }
+  .hero-meta {
+    display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+  .meta-val { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  /* ── CONTAINERS ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 56px 48px; }
+  .container-wide { max-width: 1300px; margin: 0 auto; padding: 56px 48px; }
+
+  /* ── SECTION HEADERS ── */
+  .sec-head {
+    display: flex; align-items: baseline; gap: 16px;
+    margin-bottom: 40px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px; color: var(--border);
+    line-height: 1; user-select: none;
+  }
+  .sec-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .sec-title span { color: var(--accent); }
+  .sec-pill {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    padding: 4px 12px; border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-label {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  /* ── FEEDBACK CARDS ── */
+  .feedback-block { margin-bottom: 48px; }
+  .feedback-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 72px; color: rgba(108,99,255,0.1);
+    line-height: 1; float: left; margin-right: 16px;
+  }
+  .feedback-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .feedback-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+  }
+  .pillar-tag {
+    font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 3px 10px;
+    border-radius: 2px; border: 1px solid;
+  }
+  .pillar-features { color: #6c63ff; border-color: rgba(108,99,255,0.4); background: rgba(108,99,255,0.08); }
+  .pillar-gtm { color: #ff6b6b; border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+  .pillar-competitor { color: #ffd93d; border-color: rgba(255,217,61,0.4); background: rgba(255,217,61,0.08); }
+  .pillar-ux { color: #00d4aa; border-color: rgba(0,212,170,0.4); background: rgba(0,212,170,0.08); }
+  .pillar-collab { color: #ff9f43; border-color: rgba(255,159,67,0.4); background: rgba(255,159,67,0.08); }
+
+  .ice-badge {
+    margin-left: auto;
+    font-size: 11px; padding: 3px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .ice-badge strong { color: var(--accent4); }
+
+  .obs-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 768px) { .obs-grid { grid-template-columns: 1fr; } }
+  .obs-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 20px;
+  }
+  .obs-cell-head {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .obs-cell-head.observed { color: var(--accent); }
+  .obs-cell-head.problem { color: var(--accent2); }
+  .obs-cell-head.ship { color: var(--accent3); }
+  .obs-cell p { font-size: 13px; color: var(--text); }
+
+  /* ── MOCKUP ── */
+  .mockup-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px;
+    margin-top: 20px;
+  }
+  .mockup-label {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .mockup-label::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+  .mockup-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 768px) { .mockup-grid { grid-template-columns: 1fr; } }
+  .mockup-screen {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+  }
+  .mockup-titlebar {
+    background: var(--surface2);
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #28c840; }
+  .mockup-body { padding: 16px; }
+  .mockup-tag {
+    display: inline-block; font-size: 10px;
+    padding: 2px 8px; border-radius: 2px;
+    margin-bottom: 12px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tag-before { background: rgba(255,107,107,0.15); color: var(--accent2); border: 1px solid rgba(255,107,107,0.3); }
+  .tag-after { background: rgba(0,212,170,0.15); color: var(--accent3); border: 1px solid rgba(0,212,170,0.3); }
+
+  /* SVG mockup styles */
+  .svg-mockup { width: 100%; height: auto; display: block; }
+
+  /* ── GRIDS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) {
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+
+  /* ── SWOT ── */
+  .swot-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 2px; border: 1px solid var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+  .swot-cell { padding: 24px; background: var(--surface); }
+  .swot-cell:nth-child(1) { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+  .swot-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+  .swot-cell:nth-child(3) { border-right: 1px solid var(--border); }
+  .swot-head {
+    font-family: 'Syne', sans-serif; font-size: 14px;
+    font-weight: 700; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .swot-s { color: #00d4aa; }
+  .swot-w { color: #ff6b6b; }
+  .swot-o { color: #6c63ff; }
+  .swot-t { color: #ffd93d; }
+  .swot-cell ul { list-style: none; }
+  .swot-cell ul li {
+    font-size: 12px; color: var(--muted);
+    padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding-left: 12px; position: relative;
+  }
+  .swot-cell ul li::before { content: '→'; position: absolute; left: 0; color: var(--border); }
+
+  /* ── PORTER'S ── */
+  .porter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .porter-grid { grid-template-columns: 1fr; } }
+  .porter-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 20px;
+  }
+  .porter-head {
+    font-family: 'Syne', sans-serif; font-size: 13px;
+    font-weight: 700; margin-bottom: 12px;
+  }
+  .force-badge {
+    display: inline-block; font-size: 10px;
+    padding: 2px 8px; border-radius: 2px;
+    margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .high { background: rgba(255,107,107,0.15); color: var(--accent2); border: 1px solid rgba(255,107,107,0.3); }
+  .med { background: rgba(255,217,61,0.15); color: var(--accent4); border: 1px solid rgba(255,217,61,0.3); }
+  .low { background: rgba(0,212,170,0.15); color: var(--accent3); border: 1px solid rgba(0,212,170,0.3); }
+
+  /* ── 7PS ── */
+  .ps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .ps-grid { grid-template-columns: 1fr 1fr; } }
+  .ps-cell {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 20px;
+  }
+  .ps-head {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .ps-body { font-size: 12px; color: var(--muted); }
+
+  /* ── ROADMAP ── */
+  .roadmap-row {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    gap: 20px; align-items: start;
+    padding: 20px 0; border-bottom: 1px solid var(--border);
+  }
+  .rm-week {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 1px; padding-top: 4px;
+  }
+  .rm-title {
+    font-family: 'Syne', sans-serif; font-size: 15px;
+    font-weight: 700; margin-bottom: 6px;
+  }
+  .rm-desc { font-size: 12px; color: var(--muted); }
+  .rm-ice {
+    font-size: 12px; text-align: right;
+    white-space: nowrap; padding-top: 4px;
+  }
+  .rm-ice strong { color: var(--accent4); }
+
+  /* ── ICE TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    text-align: left; padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 14px 16px; font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .rank-col { color: var(--muted); font-size: 11px; }
+  .score-col { color: var(--accent4); font-weight: 500; }
+
+  /* ── ICP PERSONAS ── */
+  .persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .persona-grid { grid-template-columns: 1fr; } }
+  .persona-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px;
+  }
+  .persona-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    margin-bottom: 16px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px;
+  }
+  .persona-name {
+    font-family: 'Syne', sans-serif; font-size: 16px;
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .persona-role { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+  .persona-stat {
+    display: flex; justify-content: space-between;
+    font-size: 11px; padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .persona-stat-label { color: var(--muted); }
+  .persona-stat-val { color: var(--text); }
+
+  /* ── THESIS ── */
+  .thesis-box {
+    background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(0,212,170,0.05));
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 4px; padding: 40px;
+    position: relative; overflow: hidden;
+  }
+  .thesis-box::before {
+    content: '"';
+    font-family: 'Instrument Serif', serif;
+    font-size: 200px; color: rgba(108,99,255,0.08);
+    position: absolute; top: -40px; left: 20px;
+    line-height: 1;
+  }
+  .thesis-text {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; line-height: 1.5;
+    position: relative; z-index: 1;
+  }
+  .thesis-text em { color: var(--accent); font-style: italic; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ── HIGHLIGHT ── */
+  .hl { color: var(--accent); }
+  .hl2 { color: var(--accent2); }
+  .hl3 { color: var(--accent3); }
+  .hl4 { color: var(--accent4); }
+
+  /* ── INLINE CODE ── */
+  code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; padding: 2px 6px;
+    border-radius: 2px; color: var(--accent3);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    color: var(--muted); font-size: 12px;
+  }
+  footer strong { color: var(--text); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">VOCALLABS.AI ↗</div>
+  <button class="active" onclick="show('overview',this)">Overview</button>
+  <button onclick="show('f01',this)">01 · Blueprint Wizard</button>
+  <button onclick="show('f02',this)">02 · India Sandbox</button>
+  <button onclick="show('f03',this)">03 · Handoff Snapshot</button>
+  <button onclick="show('f04',this)">04 · Dev Experience</button>
+  <button onclick="show('f05',this)">05 · Heatmap Transcripts</button>
+  <button onclick="show('frameworks',this)">Frameworks</button>
+  <button onclick="show('roadmap',this)">Roadmap</button>
+</nav>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<div id="overview" class="section active">
+  <div class="hero">
+    <div class="hero-tag">Product Teardown · 2026</div>
+    <h1>Vocallabs.ai<br><span>Product Intern</span><br>Assignment</h1>
+    <p class="hero-sub">5 sharp, non-obvious feedbacks across GTM, Features, Competitor, UX & Potential Collaborations. Each grounded in real app usage and mapped to an Observed → Problem → Ship chain.</p>
+    <div class="hero-meta">
+      <div class="meta-item"><span class="meta-label">Company</span><span class="meta-val">Vocallabs.ai</span></div>
+      <div class="meta-item"><span class="meta-label">Assignment</span><span class="meta-val">Subspace.money Intern 2026</span></div>
+      <div class="meta-item"><span class="meta-label">Deadline</span><span class="meta-val">31 May 2026, 11:59 PM IST</span></div>
+      <div class="meta-item"><span class="meta-label">Framework</span><span class="meta-val">SWOT + Porter's + 7Ps + ICE</span></div>
+      <div class="meta-item"><span class="meta-label">Top ICE Score</span><span class="meta-val">504 (Blueprint Wizard)</span></div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ICE Priority Table -->
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <span class="sec-title">ICE <span>Priority Matrix</span></span>
+      <span class="sec-pill">Impact × Confidence × Ease</span>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Feedback Title</th><th>Pillar</th>
+            <th>Impact (1–10)</th><th>Confidence (1–10)</th><th>Ease (1–10)</th><th>ICE Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rank-col">01</td>
+            <td><strong>Blueprint Recipe Wizard</strong></td>
+            <td><span class="pillar-tag pillar-features">Features</span></td>
+            <td>9</td><td>8</td><td>7</td><td class="score-col">504</td>
+          </tr>
+          <tr>
+            <td class="rank-col">03</td>
+            <td><strong>Context Snapshot Widget</strong></td>
+            <td><span class="pillar-tag pillar-collab">Potential</span></td>
+            <td>9</td><td>8</td><td>6</td><td class="score-col">432</td>
+          </tr>
+          <tr>
+            <td class="rank-col">04</td>
+            <td><strong>Postman Collections + Webhook Sim</strong></td>
+            <td><span class="pillar-tag pillar-competitor">Competitor</span></td>
+            <td>7</td><td>8</td><td>7</td><td class="score-col">392</td>
+          </tr>
+          <tr>
+            <td class="rank-col">05</td>
+            <td><strong>Heatmapped Transcript → Flow Node</strong></td>
+            <td><span class="pillar-tag pillar-ux">UX</span></td>
+            <td>8</td><td>7</td><td>6</td><td class="score-col">336</td>
+          </tr>
+          <tr>
+            <td class="rank-col">02</td>
+            <td><strong>India-First Localized Sandbox</strong></td>
+            <td><span class="pillar-tag pillar-gtm">GTM</span></td>
+            <td>7</td><td>8</td><td>5</td><td class="score-col">280</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ICP Personas -->
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <span class="sec-title">ICP <span>Personas</span></span>
+    </div>
+
+    <div class="persona-grid">
+      <div class="persona-card">
+        <div class="persona-avatar" style="background:rgba(108,99,255,0.15);">🏭</div>
+        <div class="persona-name">Rahul M.</div>
+        <div class="persona-role">D2C Brand Founder · Bengaluru</div>
+        <div class="persona-stat"><span class="persona-stat-label">Company size</span><span class="persona-stat-val">15–80 employees</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Use case</span><span class="persona-stat-val">Outbound sales / order confirmations</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Pain</span><span class="persona-stat-val">Human agents = high attrition</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Decision trigger</span><span class="persona-stat-val">Missed calls → lost revenue</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Willingness to pay</span><span class="persona-stat-val">₹8K–25K / month</span></div>
+      </div>
+      <div class="persona-card">
+        <div class="persona-avatar" style="background:rgba(0,212,170,0.15);">🏥</div>
+        <div class="persona-name">Priya S.</div>
+        <div class="persona-role">Ops Head · Healthcare Clinic Chain</div>
+        <div class="persona-stat"><span class="persona-stat-label">Company size</span><span class="persona-stat-val">5–20 locations</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Use case</span><span class="persona-stat-val">Appointment booking + reminders</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Pain</span><span class="persona-stat-val">No-shows + receptionist overload</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Decision trigger</span><span class="persona-stat-val">OPD queue backlog</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Willingness to pay</span><span class="persona-stat-val">₹15K–40K / month</span></div>
+      </div>
+      <div class="persona-card">
+        <div class="persona-avatar" style="background:rgba(255,217,61,0.15);">💻</div>
+        <div class="persona-name">Arjun T.</div>
+        <div class="persona-role">Tech Lead · Series A SaaS</div>
+        <div class="persona-stat"><span class="persona-stat-label">Company size</span><span class="persona-stat-val">50–200 employees</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Use case</span><span class="persona-stat-val">API-first voice automation</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Pain</span><span class="persona-stat-val">Twilio too generic, Lingo too US-centric</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Decision trigger</span><span class="persona-stat-val">Build vs buy decision</span></div>
+        <div class="persona-stat"><span class="persona-stat-label">Willingness to pay</span><span class="persona-stat-val">Usage-based, ₹5L+/yr</span></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Closing thesis -->
+    <div class="thesis-box">
+      <p class="thesis-text">Vocallabs's engine is <em>genuinely differentiated</em> — India-tuned voices, full-stack analytics, and a hybrid handoff model that US competitors can't easily replicate. Every fix in this teardown <em>surfaces what's already built</em>, not a new moat. This is activation and retention work that a Day 1 intern can own and execute.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ F01 — BLUEPRINT WIZARD ═══════════════════ -->
+<div id="f01" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <span class="sec-title">Blueprint <span>Recipe Wizard</span></span>
+      <span class="sec-pill">ICE 504 · Features</span>
+    </div>
+
+    <div class="feedback-header">
+      <span class="feedback-title">Blank Canvas Kills Activation</span>
+      <span class="pillar-tag pillar-features">Features</span>
+      <span class="ice-badge">ICE <strong>504</strong></span>
+    </div>
+
+    <div class="obs-grid">
+      <div class="obs-cell">
+        <div class="obs-cell-head observed">→ Observed</div>
+        <p>The Intelligent Call Flow Builder opens to a blank canvas. Zero pre-loaded templates, no contextual prompts, no guided onboarding. New users see an empty node editor with no indication of what a "good" flow looks like. The only entry point is a single <code>+ Add Node</code> button.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head problem">→ Problem</div>
+        <p>Blank canvas = activation drop-off. The cognitive cost of starting from nothing in a novel tool is enormous. For the ICP (D2C founder, ops head) who evaluates tools in a 15-min trial, the first session must produce value. An empty editor signals "this needs a developer" — killing self-serve conversion before a single node is placed.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head ship">→ Ship Instead</div>
+        <p>A <strong>Blueprint Recipe Wizard</strong>: a 3-step onboarding modal that asks (1) industry vertical, (2) use case type (inbound/outbound/booking), (3) language preference. The system generates a pre-wired flow template with annotated nodes, sample scripts in Hinglish or regional language, and a "Run Demo Call" button. Templates stored as JSON — low eng lift.</p>
+      </div>
+    </div>
+
+    <div class="mockup-wrap">
+      <div class="mockup-label">Figma-style Mockup — Before vs After</div>
+      <div class="mockup-grid">
+        <!-- BEFORE -->
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            vocallabs.ai / flow-builder
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-before">Before</span>
+            <svg class="svg-mockup" viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid background -->
+              <defs>
+                <pattern id="grid1" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2a2a35" stroke-width="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="340" height="220" fill="#0d0d14"/>
+              <rect width="340" height="220" fill="url(#grid1)"/>
+              <!-- Sidebar -->
+              <rect x="0" y="0" width="56" height="220" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <rect x="8" y="16" width="40" height="24" rx="2" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <rect x="8" y="48" width="40" height="24" rx="2" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <rect x="8" y="80" width="40" height="24" rx="2" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <!-- Empty canvas message -->
+              <text x="198" y="100" text-anchor="middle" fill="#2a2a35" font-family="monospace" font-size="11">Click + to add a node</text>
+              <text x="198" y="120" text-anchor="middle" fill="#1e1e28" font-family="monospace" font-size="9">No templates available</text>
+              <!-- Plus button lonely -->
+              <rect x="170" y="135" width="56" height="24" rx="2" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <text x="198" y="151" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="10">+ Add Node</text>
+            </svg>
+          </div>
+        </div>
+        <!-- AFTER -->
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            vocallabs.ai / flow-builder — Blueprint Wizard
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-after">After</span>
+            <svg class="svg-mockup" viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="220" fill="#0d0d14"/>
+              <!-- Modal overlay -->
+              <rect width="340" height="220" fill="rgba(0,0,0,0.7)"/>
+              <rect x="40" y="20" width="260" height="180" rx="6" fill="#14141c" stroke="#2a2a35" stroke-width="1"/>
+              <!-- Modal header -->
+              <rect x="40" y="20" width="260" height="36" rx="6" fill="#18181f"/>
+              <rect x="40" y="44" width="260" height="12" fill="#18181f"/>
+              <text x="170" y="43" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="11" font-weight="bold">Blueprint Wizard — Step 1 of 3</text>
+              <!-- Step pills -->
+              <circle cx="100" cy="70" r="8" fill="#6c63ff"/>
+              <text x="100" y="74" text-anchor="middle" fill="white" font-family="monospace" font-size="8">1</text>
+              <rect x="110" y="69" width="40" height="2" fill="#2a2a35"/>
+              <circle cx="158" cy="70" r="8" fill="#2a2a35"/>
+              <text x="158" y="74" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">2</text>
+              <rect x="168" y="69" width="40" height="2" fill="#2a2a35"/>
+              <circle cx="216" cy="70" r="8" fill="#2a2a35"/>
+              <text x="216" y="74" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">3</text>
+              <!-- Question -->
+              <text x="170" y="100" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="10">Pick your industry vertical</text>
+              <!-- Options grid -->
+              <rect x="52" y="110" width="72" height="30" rx="3" fill="rgba(108,99,255,0.2)" stroke="#6c63ff" stroke-width="1"/>
+              <text x="88" y="129" text-anchor="middle" fill="#6c63ff" font-family="monospace" font-size="9">D2C / E-comm</text>
+              <rect x="134" y="110" width="72" height="30" rx="3" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <text x="170" y="129" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="9">Healthcare</text>
+              <rect x="216" y="110" width="72" height="30" rx="3" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <text x="252" y="129" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="9">Fintech</text>
+              <!-- CTA -->
+              <rect x="110" y="160" width="120" height="28" rx="3" fill="#6c63ff"/>
+              <text x="170" y="178" text-anchor="middle" fill="white" font-family="monospace" font-size="10">Next → Use Case</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">Tradeoff Thinking</div>
+      <p style="font-size:13px; color:var(--muted);">Template wizard adds ~3 days of eng work (JSON schema + modal UI). Tradeoff: wizard slightly delays power users who want a blank canvas. Mitigate with a "Skip wizard" link. ROI: if trial → activation improves by even 10%, the CAC reduction compounds significantly given inbound interest from India's D2C boom.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ F02 — INDIA SANDBOX ═══════════════════ -->
+<div id="f02" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <span class="sec-title">India-First <span>Localized Sandbox</span></span>
+      <span class="sec-pill">ICE 280 · GTM</span>
+    </div>
+
+    <div class="feedback-header">
+      <span class="feedback-title">Marketing Claims "India-First" — Product Doesn't Show It</span>
+      <span class="pillar-tag pillar-gtm">GTM</span>
+      <span class="ice-badge">ICE <strong>280</strong></span>
+    </div>
+
+    <div class="obs-grid">
+      <div class="obs-cell">
+        <div class="obs-cell-head observed">→ Observed</div>
+        <p>The homepage hero loudly claims "India's first AI voice agent platform." Yet the live demo voice is US-accented English. The playground doesn't let you select regional languages (Hindi, Tamil, Marathi, Telugu) or accents. Call scripts shown in screenshots are in generic English. No Hinglish sample flows exist in the public-facing product.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head problem">→ Problem</div>
+        <p>The "India-first" moat is Vocallabs's clearest differentiator vs Bland.ai, Retell, and VAPI — all US-built. But if a potential customer evaluates the demo and hears a US accent, the claimed moat disappears instantly. The GTM positioning gets undermined by the product experience itself. This directly affects conversion of India-market sales teams doing trials.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head ship">→ Ship Instead</div>
+        <p>A <strong>Regional Voice Sandbox</strong>: a dedicated "India Demo" page with 6 pre-built voice profiles (Hindi-male, Hindi-female, Tamil, Telugu, Bengaluru-English, Pan-India-Hinglish). Each profile comes with a sample call scenario (OTP verification, clinic appointment, loan reminder) runnable in-browser with no sign-up. Embed a language toggle in the main playground.</p>
+      </div>
+    </div>
+
+    <div class="mockup-wrap">
+      <div class="mockup-label">Figma-style Mockup — India Demo Page</div>
+      <div class="mockup-grid">
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            vocallabs.ai/demo — Current State
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-before">Before</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <text x="170" y="40" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="13" font-weight="bold">Try Our Demo</text>
+              <text x="170" y="60" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="9">One single demo voice — US English</text>
+              <!-- Single voice card -->
+              <rect x="80" y="75" width="180" height="60" rx="4" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <circle cx="110" cy="105" r="14" fill="#18181f" stroke="#2a2a35" stroke-width="1"/>
+              <text x="110" y="109" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="9">🔊</text>
+              <text x="180" y="98" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="10">Alex (English)</text>
+              <text x="180" y="114" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">US Accent · Sales flow</text>
+              <rect x="120" y="155" width="100" height="24" rx="3" fill="#6c63ff"/>
+              <text x="170" y="171" text-anchor="middle" fill="white" font-family="monospace" font-size="9">Start Call</text>
+            </svg>
+          </div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            vocallabs.ai/india-demo — Proposed
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-after">After</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <text x="170" y="30" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="12" font-weight="bold">India Voice Sandbox 🇮🇳</text>
+              <text x="170" y="46" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">6 regional voice profiles · No sign-up needed</text>
+              <!-- Voice grid -->
+              <rect x="12" y="56" width="74" height="44" rx="3" fill="rgba(108,99,255,0.15)" stroke="#6c63ff" stroke-width="1"/>
+              <text x="49" y="74" text-anchor="middle" fill="#6c63ff" font-family="monospace" font-size="8">Hindi ♀</text>
+              <text x="49" y="88" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Hinglish</text>
+              <rect x="94" y="56" width="74" height="44" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="131" y="74" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="8">Hindi ♂</text>
+              <text x="131" y="88" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Formal</text>
+              <rect x="176" y="56" width="74" height="44" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="213" y="74" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="8">Tamil ♀</text>
+              <text x="213" y="88" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Chennai</text>
+              <rect x="258" y="56" width="74" height="44" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="295" y="74" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="8">Telugu ♂</text>
+              <text x="295" y="88" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Hyd accent</text>
+              <!-- Scenario selector -->
+              <text x="12" y="120" fill="#6b6b80" font-family="monospace" font-size="8">SCENARIO</text>
+              <rect x="12" y="126" width="90" height="20" rx="2" fill="rgba(0,212,170,0.15)" stroke="#00d4aa" stroke-width="1"/>
+              <text x="57" y="140" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="7">OTP Verification</text>
+              <rect x="110" y="126" width="90" height="20" rx="2" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="155" y="140" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Appt Booking</text>
+              <rect x="208" y="126" width="90" height="20" rx="2" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="253" y="140" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="7">Loan Reminder</text>
+              <!-- CTA -->
+              <rect x="100" y="162" width="140" height="26" rx="3" fill="#6c63ff"/>
+              <text x="170" y="179" text-anchor="middle" fill="white" font-family="monospace" font-size="9">▶ Run Demo Call (Hindi)</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">GTM Context — Competitive Framing</div>
+      <p style="font-size:13px; color:var(--muted);">Bland.ai and Retell both lack India-language support. VAPI has Hindi but no Hinglish or regional accents. This sandbox directly weaponizes the India-first moat in the sales discovery call: "Let us play you a Tamil booking confirmation vs what Retell sounds like." Regional voice demos convert skeptics faster than any feature list.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ F03 — HANDOFF SNAPSHOT ═══════════════════ -->
+<div id="f03" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <span class="sec-title">Context Snapshot <span>at Handoff</span></span>
+      <span class="sec-pill">ICE 432 · Potential Collaborations</span>
+    </div>
+
+    <div class="feedback-header">
+      <span class="feedback-title">AI → Human Handoff Loses Context Every Time</span>
+      <span class="pillar-tag pillar-collab">Potential</span>
+      <span class="ice-badge">ICE <strong>432</strong></span>
+    </div>
+
+    <div class="obs-grid">
+      <div class="obs-cell">
+        <div class="obs-cell-head observed">→ Observed</div>
+        <p>The hybrid AI ↔ human handoff feature is highlighted as a core differentiator on the website. However, in the documented flows and demo, there is no mention of what data is passed to the human agent at the moment of handoff. The live agent appears to receive only a bare transfer — no pre-call summary, intent classification, or conversation snapshot is visible in the agent UI.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head problem">→ Problem</div>
+        <p>The primary user complaint in voice automation across categories is: "I just explained this to the robot and now I have to explain it again to the human." This is the top trust-killer in hybrid AI models. If the live agent starts cold, the promise of "seamless handoff" collapses in the customer's actual experience — which is the moment of highest emotional stakes in the call.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head ship">→ Ship Instead</div>
+        <p>A <strong>Context Snapshot Widget</strong>: at the moment of escalation, the human agent's screen receives a real-time card showing: (1) one-line intent summary, (2) 3 key entities extracted (name, order ID, issue), (3) emotion flag from voice analytics (frustrated / neutral / satisfied), (4) transcript snippet of last 30 seconds. Buildable via CRM webhooks (Freshdesk, Zoho, LeadSquared).</p>
+      </div>
+    </div>
+
+    <div class="mockup-wrap">
+      <div class="mockup-label">Agent Screen — Handoff Context Snapshot Widget</div>
+      <div class="mockup-grid">
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            Agent CRM — Incoming Transfer (Before)
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-before">Before</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <rect x="12" y="20" width="316" height="60" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="24" y="38" fill="#6b6b80" font-family="monospace" font-size="8">INCOMING TRANSFER</text>
+              <text x="24" y="58" fill="#e8e8f0" font-family="monospace" font-size="11">+91-98765-XXXXX</text>
+              <text x="24" y="72" fill="#2a2a35" font-family="monospace" font-size="8">No additional context available</text>
+              <!-- Empty space -->
+              <text x="170" y="130" text-anchor="middle" fill="#2a2a35" font-family="monospace" font-size="10">Agent starts cold.</text>
+              <text x="170" y="148" text-anchor="middle" fill="#1e1e28" font-family="monospace" font-size="9">Customer repeats everything.</text>
+            </svg>
+          </div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            Agent CRM — Context Snapshot Widget (After)
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-after">After</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <!-- Snapshot card -->
+              <rect x="12" y="10" width="316" height="175" rx="4" fill="#111118" stroke="rgba(108,99,255,0.4)" stroke-width="1"/>
+              <rect x="12" y="10" width="316" height="28" rx="4" fill="rgba(108,99,255,0.15)"/>
+              <rect x="12" y="30" width="316" height="8" fill="rgba(108,99,255,0.15)"/>
+              <text x="24" y="28" fill="#6c63ff" font-family="monospace" font-size="8" font-weight="bold">VOCALLABS CONTEXT SNAPSHOT · LIVE TRANSFER</text>
+              <!-- Intent -->
+              <text x="24" y="54" fill="#6b6b80" font-family="monospace" font-size="7">INTENT</text>
+              <text x="24" y="67" fill="#e8e8f0" font-family="monospace" font-size="10">Order #ORD-4821 delivery delay complaint</text>
+              <!-- Entities -->
+              <text x="24" y="87" fill="#6b6b80" font-family="monospace" font-size="7">KEY ENTITIES</text>
+              <rect x="24" y="93" width="60" height="16" rx="2" fill="rgba(0,212,170,0.1)" stroke="#00d4aa" stroke-width="0.5"/>
+              <text x="54" y="104" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="7">Rahul Gupta</text>
+              <rect x="92" y="93" width="70" height="16" rx="2" fill="rgba(0,212,170,0.1)" stroke="#00d4aa" stroke-width="0.5"/>
+              <text x="127" y="104" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="7">ORD-4821</text>
+              <rect x="170" y="93" width="70" height="16" rx="2" fill="rgba(0,212,170,0.1)" stroke="#00d4aa" stroke-width="0.5"/>
+              <text x="205" y="104" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="7">5-day delay</text>
+              <!-- Emotion -->
+              <text x="24" y="128" fill="#6b6b80" font-family="monospace" font-size="7">EMOTION SIGNAL</text>
+              <rect x="24" y="134" width="90" height="16" rx="2" fill="rgba(255,107,107,0.15)" stroke="#ff6b6b" stroke-width="0.5"/>
+              <text x="69" y="146" text-anchor="middle" fill="#ff6b6b" font-family="monospace" font-size="8">😤 Frustrated</text>
+              <!-- Snippet -->
+              <text x="24" y="165" fill="#6b6b80" font-family="monospace" font-size="7">LAST 30s: "...said it would arrive Friday, this is unacceptable..."</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">Collaboration Opportunity</div>
+      <p style="font-size:13px; color:var(--muted);">This feature creates a natural partnership wedge with <strong class="hl">Freshdesk</strong>, <strong class="hl">Zoho CRM</strong>, and <strong class="hl">LeadSquared</strong> — all dominant in India's SMB market. Co-marketing as "Vocallabs + Freshdesk = the only voice-to-CRM handoff with real-time context" creates a distribution flywheel. Freshdesk has a partner marketplace; native integration listing there reaches their 60K+ customer base.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ F04 — DEV EXPERIENCE ═══════════════════ -->
+<div id="f04" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <span class="sec-title">Developer <span>Experience Gap</span></span>
+      <span class="sec-pill">ICE 392 · Competitor</span>
+    </div>
+
+    <div class="feedback-header">
+      <span class="feedback-title">Docs Exist. Developer Confidence Doesn't.</span>
+      <span class="pillar-tag pillar-competitor">Competitor</span>
+      <span class="ice-badge">ICE <strong>392</strong></span>
+    </div>
+
+    <div class="obs-grid">
+      <div class="obs-cell">
+        <div class="obs-cell-head observed">→ Observed</div>
+        <p>The Vocallabs API and SDK are mentioned on the homepage and a docs link exists. However, there are no public Postman collections, no live webhook sandbox (a test endpoint that echoes events), no example repo on GitHub, and the n8n node — while listed — has no guided setup walkthrough. The changelog is absent from docs.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head problem">→ Problem</div>
+        <p>For developer evaluators (the "Arjun" ICP), VAPI and Retell both offer Postman collections and live webhook inspectors. A developer evaluating Vocallabs vs VAPI in a 2-hour proof-of-concept session will choose the path of least friction. Missing these artifacts signals immaturity and increases time-to-first-working-call — the exact moment that creates developer advocacy or churn.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head ship">→ Ship Instead</div>
+        <p>Three artifacts: (1) <strong>Public Postman collection</strong> — pre-authenticated "Run in Postman" button on every API endpoint page. (2) <strong>Webhook echo server</strong> — a hosted endpoint at <code>echo.vocallabs.ai</code> that logs incoming events for 10 minutes, shown live in the docs. (3) <strong>GitHub repo</strong> with 3 starter templates: Node.js booking bot, Python lead qualifier, React widget. All three can be done in 1 sprint.</p>
+      </div>
+    </div>
+
+    <div class="mockup-wrap">
+      <div class="mockup-label">Developer Docs — Before vs After</div>
+      <div class="mockup-grid">
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            docs.vocallabs.ai/api — Current
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-before">Before</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <!-- Sidebar -->
+              <rect x="0" y="0" width="80" height="200" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <rect x="8" y="16" width="64" height="12" rx="2" fill="#18181f"/>
+              <rect x="8" y="36" width="52" height="10" rx="2" fill="#18181f"/>
+              <rect x="8" y="54" width="60" height="10" rx="2" fill="#18181f"/>
+              <!-- Content -->
+              <text x="90" y="30" fill="#e8e8f0" font-family="monospace" font-size="11" font-weight="bold">POST /calls/initiate</text>
+              <rect x="90" y="40" width="220" height="55" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="100" y="58" fill="#6c63ff" font-family="monospace" font-size="8">curl -X POST https://api.vocallabs.ai/v1/calls \</text>
+              <text x="100" y="71" fill="#00d4aa" font-family="monospace" font-size="8">  -H "Authorization: Bearer YOUR_KEY"</text>
+              <text x="100" y="84" fill="#6b6b80" font-family="monospace" font-size="8">  -d '{"phone": "+91..."}'</text>
+              <!-- No postman, no webhook -->
+              <text x="90" y="120" fill="#2a2a35" font-family="monospace" font-size="9">No "Run in Postman" button</text>
+              <text x="90" y="138" fill="#2a2a35" font-family="monospace" font-size="9">No webhook inspector</text>
+              <text x="90" y="156" fill="#2a2a35" font-family="monospace" font-size="9">No example repos</text>
+            </svg>
+          </div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            docs.vocallabs.ai/api — Proposed
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-after">After</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <rect x="0" y="0" width="80" height="200" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <rect x="8" y="16" width="64" height="12" rx="2" fill="#18181f"/>
+              <rect x="8" y="36" width="52" height="10" rx="2" fill="#18181f"/>
+              <rect x="8" y="54" width="60" height="10" rx="2" fill="#18181f"/>
+              <text x="90" y="26" fill="#e8e8f0" font-family="monospace" font-size="11" font-weight="bold">POST /calls/initiate</text>
+              <!-- Postman button -->
+              <rect x="90" y="32" width="120" height="20" rx="3" fill="rgba(255,107,107,0.15)" stroke="#ff6b6b" stroke-width="1"/>
+              <text x="150" y="46" text-anchor="middle" fill="#ff6b6b" font-family="monospace" font-size="8">▶ Run in Postman</text>
+              <!-- Code -->
+              <rect x="90" y="58" width="220" height="50" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="100" y="74" fill="#6c63ff" font-family="monospace" font-size="8">curl -X POST .../v1/calls \</text>
+              <text x="100" y="87" fill="#00d4aa" font-family="monospace" font-size="8">  -H "Authorization: Bearer ..."</text>
+              <text x="100" y="100" fill="#6b6b80" font-family="monospace" font-size="8">  -d '{"phone": "+91..."}'</text>
+              <!-- Webhook inspector -->
+              <rect x="90" y="116" width="220" height="32" rx="3" fill="rgba(0,212,170,0.08)" stroke="#00d4aa" stroke-width="1"/>
+              <text x="100" y="128" fill="#00d4aa" font-family="monospace" font-size="7">🔗 Webhook Echo</text>
+              <text x="100" y="141" fill="#6b6b80" font-family="monospace" font-size="7">echo.vocallabs.ai/test-xyz · expires in 9:47</text>
+              <!-- GitHub -->
+              <rect x="90" y="156" width="100" height="20" rx="3" fill="rgba(108,99,255,0.15)" stroke="#6c63ff" stroke-width="1"/>
+              <text x="140" y="170" text-anchor="middle" fill="#6c63ff" font-family="monospace" font-size="7">⬡ GitHub Starter Kits</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">Competitor Benchmarking</div>
+      <div class="two-col">
+        <div>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:12px;"><strong class="hl">VAPI:</strong> Full Postman collection, webhook playground, Discord community with code snippets. Time-to-first-working-call: ~20 minutes.</p>
+          <p style="font-size:13px; color:var(--muted);"><strong class="hl">Retell:</strong> Hosted demo sandbox, no sign-up required. GitHub org with 8 repos. Changelog published weekly.</p>
+        </div>
+        <div>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:12px;"><strong class="hl3">Vocallabs (current):</strong> Docs exist but no quick-start artifacts. Time-to-first-working-call: unknown, no guided path.</p>
+          <p style="font-size:13px; color:var(--muted);"><strong class="hl3">Vocallabs (proposed):</strong> Postman + webhook echo + 3 repos → estimated time-to-first-call drops to ~25 minutes, competitive with VAPI.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ F05 — HEATMAP TRANSCRIPTS ═══════════════════ -->
+<div id="f05" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <span class="sec-title">Heatmapped <span>Transcripts</span></span>
+      <span class="sec-pill">ICE 336 · UX</span>
+    </div>
+
+    <div class="feedback-header">
+      <span class="feedback-title">Analytics Page Shows Numbers. Not Decisions.</span>
+      <span class="pillar-tag pillar-ux">UX</span>
+      <span class="ice-badge">ICE <strong>336</strong></span>
+    </div>
+
+    <div class="obs-grid">
+      <div class="obs-cell">
+        <div class="obs-cell-head observed">→ Observed</div>
+        <p>The Voice Analytics dashboard shows aggregate metrics: average call duration, emotion distribution (% frustrated / neutral / happy), intent classification counts. Transcripts are available as a flat text dump per call. There is no visual connection between where in the call script a drop-off or emotion shift occurs and the specific flow node responsible.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head problem">→ Problem</div>
+        <p>The analytics tell you <em>what</em> happened (35% frustrated callers) but not <em>where</em> or <em>why</em> (at the payment confirmation node, 68% of frustrated callers dropped off). This forces the operator to manually cross-reference transcript timestamps with call flow nodes — a workflow so painful that most users never close the loop between analytics and flow optimization. The insight goes to waste.</p>
+      </div>
+      <div class="obs-cell">
+        <div class="obs-cell-head ship">→ Ship Instead</div>
+        <p>A <strong>Transcript Heatmap overlay</strong>: in the Call Flow Builder, each node gets a color-coded emotion ring (green/amber/red) and a hover tooltip showing: drop-off %, average time spent, emotion breakdown at that node. Clicking a node opens its linked transcript snippets. This connects the analytics product to the flow builder — two currently siloed tools — and creates a retention loop (users who optimize flows see improvement, stay longer).</p>
+      </div>
+    </div>
+
+    <div class="mockup-wrap">
+      <div class="mockup-label">Call Flow Builder — Heatmap Overlay</div>
+      <div class="mockup-grid">
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            Analytics Dashboard — Current
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-before">Before</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <!-- Aggregate stats only -->
+              <rect x="12" y="16" width="90" height="50" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="57" y="38" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">AVG DURATION</text>
+              <text x="57" y="56" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="16" font-weight="bold">2:34</text>
+              <rect x="116" y="16" width="90" height="50" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="161" y="38" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">FRUSTRATED</text>
+              <text x="161" y="56" text-anchor="middle" fill="#ff6b6b" font-family="monospace" font-size="16" font-weight="bold">35%</text>
+              <rect x="220" y="16" width="108" height="50" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="274" y="38" text-anchor="middle" fill="#6b6b80" font-family="monospace" font-size="8">COMPLETION</text>
+              <text x="274" y="56" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="16" font-weight="bold">62%</text>
+              <!-- Flat transcript list -->
+              <text x="12" y="90" fill="#6b6b80" font-family="monospace" font-size="8">TRANSCRIPTS</text>
+              <rect x="12" y="96" width="316" height="24" rx="2" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="22" y="112" fill="#6b6b80" font-family="monospace" font-size="8">2026-05-30 · Call #4821 · 3:12 — View transcript</text>
+              <rect x="12" y="126" width="316" height="24" rx="2" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="22" y="142" fill="#6b6b80" font-family="monospace" font-size="8">2026-05-30 · Call #4820 · 1:47 — View transcript</text>
+              <text x="170" y="180" text-anchor="middle" fill="#2a2a35" font-family="monospace" font-size="8">No link to flow builder. Where did they drop off?</text>
+            </svg>
+          </div>
+        </div>
+        <div class="mockup-screen">
+          <div class="mockup-titlebar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            Flow Builder + Heatmap Overlay — Proposed
+          </div>
+          <div class="mockup-body">
+            <span class="mockup-tag tag-after">After</span>
+            <svg class="svg-mockup" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e1e28" stroke-width="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="340" height="200" fill="#0d0d14"/>
+              <rect width="340" height="200" fill="url(#grid2)"/>
+              <!-- Heatmap toggle -->
+              <rect x="200" y="8" width="130" height="18" rx="9" fill="rgba(108,99,255,0.2)" stroke="#6c63ff" stroke-width="1"/>
+              <text x="265" y="20" text-anchor="middle" fill="#6c63ff" font-family="monospace" font-size="7">● Heatmap Mode ON</text>
+              <!-- Flow nodes with emotion rings -->
+              <!-- Node 1 — Greeting — Green -->
+              <circle cx="60" cy="60" r="22" fill="none" stroke="#00d4aa" stroke-width="3" opacity="0.5"/>
+              <rect x="42" y="45" width="36" height="30" rx="3" fill="#111118" stroke="#00d4aa" stroke-width="1"/>
+              <text x="60" y="58" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="7">Greeting</text>
+              <text x="60" y="69" text-anchor="middle" fill="#00d4aa" font-family="monospace" font-size="6">✓ 98%</text>
+              <!-- Arrow -->
+              <line x1="78" y1="60" x2="108" y2="60" stroke="#2a2a35" stroke-width="1"/>
+              <polygon points="108,56 116,60 108,64" fill="#2a2a35"/>
+              <!-- Node 2 — Product Info — Amber -->
+              <circle cx="138" cy="60" r="22" fill="none" stroke="#ffd93d" stroke-width="3" opacity="0.6"/>
+              <rect x="120" y="45" width="36" height="30" rx="3" fill="#111118" stroke="#ffd93d" stroke-width="1"/>
+              <text x="138" y="58" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="7">Product</text>
+              <text x="138" y="69" text-anchor="middle" fill="#ffd93d" font-family="monospace" font-size="6">⚠ 74%</text>
+              <!-- Arrow -->
+              <line x1="156" y1="60" x2="186" y2="60" stroke="#2a2a35" stroke-width="1"/>
+              <polygon points="186,56 194,60 186,64" fill="#2a2a35"/>
+              <!-- Node 3 — Payment — Red (drop-off point) -->
+              <circle cx="216" cy="60" r="26" fill="rgba(255,107,107,0.1)" stroke="#ff6b6b" stroke-width="3" opacity="0.8"/>
+              <rect x="198" y="45" width="36" height="30" rx="3" fill="#111118" stroke="#ff6b6b" stroke-width="1.5"/>
+              <text x="216" y="58" text-anchor="middle" fill="#e8e8f0" font-family="monospace" font-size="7">Payment</text>
+              <text x="216" y="69" text-anchor="middle" fill="#ff6b6b" font-family="monospace" font-size="6">✗ 38%</text>
+              <!-- Tooltip -->
+              <rect x="230" y="30" width="100" height="44" rx="3" fill="#14141c" stroke="#ff6b6b" stroke-width="1"/>
+              <text x="240" y="43" fill="#ff6b6b" font-family="monospace" font-size="7">⚠ Drop-off: 62%</text>
+              <text x="240" y="55" fill="#6b6b80" font-family="monospace" font-size="7">😤 Frustrated: 68%</text>
+              <text x="240" y="67" fill="#6c63ff" font-family="monospace" font-size="7">→ View 14 clips</text>
+              <!-- Transcript snippets linked -->
+              <rect x="12" y="120" width="316" height="60" rx="3" fill="#111118" stroke="#2a2a35" stroke-width="1"/>
+              <text x="22" y="136" fill="#6b6b80" font-family="monospace" font-size="7">LINKED TRANSCRIPTS — Payment Node (14 calls)</text>
+              <text x="22" y="152" fill="#ff6b6b" font-family="monospace" font-size="7">"...how many times do I have to enter UPI..."</text>
+              <text x="22" y="165" fill="#ff6b6b" font-family="monospace" font-size="7">"...wait I don't understand this step..."</text>
+              <text x="22" y="175" fill="#6c63ff" font-family="monospace" font-size="7">→ Suggest: simplify payment confirmation script</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">Retention Loop Logic</div>
+      <p style="font-size:13px; color:var(--muted);">This feature creates a <strong class="hl">product-led growth loop</strong>: operator sees drop-off at Payment node → clicks through to transcript snippets → edits the node script → re-runs calls → metrics improve → operator publishes results internally. This is the loop that converts a 3-month trial into a 3-year contract. The heatmap overlay requires no new data — Vocallabs already captures emotion + transcript + node timestamps. It's a visualization layer, not new infra.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FRAMEWORKS ═══════════════════ -->
+<div id="frameworks" class="section">
+  <div class="container-wide">
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <span class="sec-title">Strategic <span>Frameworks</span></span>
+      <span class="sec-pill">SWOT · Porter's Five Forces · 7Ps</span>
+    </div>
+
+    <!-- SWOT -->
+    <h3 style="font-family:'Syne',sans-serif; font-size:18px; margin-bottom:20px; color:var(--text);">SWOT Analysis</h3>
+    <div class="swot-grid" style="margin-bottom:48px;">
+      <div class="swot-cell">
+        <div class="swot-head swot-s">S — Strengths</div>
+        <ul>
+          <li>India-first voice tuning (regional accents, Hinglish)</li>
+          <li>Full-stack: design → execution → analytics in one product</li>
+          <li>Hybrid AI ↔ human handoff — rare in India market</li>
+          <li>Founder conviction (Joey Dash, post-Subspace, all-in)</li>
+          <li>Proprietary conversation intelligence data flywheel</li>
+          <li>n8n node + Chrome extension = workflow ecosystem</li>
+        </ul>
+      </div>
+      <div class="swot-cell">
+        <div class="swot-head swot-w">W — Weaknesses</div>
+        <ul>
+          <li>Blank canvas onboarding kills activation for non-technical buyers</li>
+          <li>India-first claim undermined by US-accented demo voice</li>
+          <li>No Postman collections / webhook sandbox → developer friction</li>
+          <li>Analytics and flow builder are siloed (no heatmap link)</li>
+          <li>Handoff context not passed to live agent</li>
+          <li>Limited public social proof / case studies from Indian brands</li>
+        </ul>
+      </div>
+      <div class="swot-cell">
+        <div class="swot-head swot-o">O — Opportunities</div>
+        <ul>
+          <li>India SMB voice automation market is pre-peak (2024–27 window)</li>
+          <li>CRM partnership with Freshdesk/Zoho = 60K+ customers reachable</li>
+          <li>DPDP Act compliance as moat (voice data residency, consent flows)</li>
+          <li>Government/BFSI verticals hungry for vernacular voice automation</li>
+          <li>WhatsApp Business API bridge (voice → chat handoff)</li>
+          <li>Series A raise narrative: data flywheel + India-first positioning</li>
+        </ul>
+      </div>
+      <div class="swot-cell">
+        <div class="swot-head swot-t">T — Threats</div>
+        <ul>
+          <li>Sarvam AI / Krutrim entering voice with sovereign India-language models</li>
+          <li>VAPI / Retell expanding India operations with distribution</li>
+          <li>Telecom incumbents (Jio, Airtel) building AI voice natively</li>
+          <li>OpenAI Realtime API commoditizing voice infrastructure layer</li>
+          <li>TRAI regulations tightening on automated outbound calls</li>
+          <li>Enterprise preference for on-premise vs cloud for sensitive calls</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PORTER'S -->
+    <h3 style="font-family:'Syne',sans-serif; font-size:18px; margin-bottom:20px; color:var(--text);">Porter's Five Forces</h3>
+    <div class="porter-grid" style="margin-bottom:48px;">
+      <div class="porter-cell">
+        <div class="porter-head">Threat of New Entrants</div>
+        <span class="force-badge high">High</span>
+        <p style="font-size:12px; color:var(--muted);">OpenAI Realtime API + Twilio = basic voice agent in a weekend. Switching costs are low for early-stage customers. Vocallabs's moat is India-specific data and workflow depth — hard for new entrants to replicate quickly, but the infrastructure barrier is near-zero globally.</p>
+      </div>
+      <div class="porter-cell">
+        <div class="porter-head">Bargaining Power of Buyers</div>
+        <span class="force-badge med">Medium</span>
+        <p style="font-size:12px; color:var(--muted);">SMB buyers have alternatives (VAPI, Bland, DIY on Twilio) but integration switching costs grow with usage. Enterprise buyers negotiate hard. Power shifts toward Vocallabs as call data + trained flows accumulate — making migration painful after 6+ months of use.</p>
+      </div>
+      <div class="porter-cell">
+        <div class="porter-head">Bargaining Power of Suppliers</div>
+        <span class="force-badge med">Medium</span>
+        <p style="font-size:12px; color:var(--muted);">Vocallabs likely depends on Azure/AWS for compute and possibly third-party TTS for regional voices. India-specific voice models from Sarvam/AI4Bharat could become leverage points. Risk: TTS supplier consolidation or pricing changes impact margins.</p>
+      </div>
+      <div class="porter-cell">
+        <div class="porter-head">Threat of Substitutes</div>
+        <span class="force-badge high">High</span>
+        <p style="font-size:12px; color:var(--muted);">WhatsApp Business API, IVR systems, chatbots, and human call centers are all substitutes. The question is not "can Vocallabs replace them" but "is the voice channel irreplaceable for the ICP's use case?" For rural India collections and OTP flows, voice remains dominant.</p>
+      </div>
+      <div class="porter-cell">
+        <div class="porter-head">Competitive Rivalry</div>
+        <span class="force-badge high">High</span>
+        <p style="font-size:12px; color:var(--muted);">VAPI (US-first, strong DevEx), Retell (enterprise sales), Bland.ai (volume), Sarvam (India-language, well-funded), Convin.ai (India, analytics-first). Rivalry is intensifying. Vocallabs's edge is the full-stack India-first position — but it must widen the gap before better-funded players localize.</p>
+      </div>
+    </div>
+
+    <!-- 7Ps -->
+    <h3 style="font-family:'Syne',sans-serif; font-size:18px; margin-bottom:20px; color:var(--text);">7Ps Marketing Mix</h3>
+    <div class="ps-grid">
+      <div class="ps-cell">
+        <div class="ps-head">Product</div>
+        <div class="ps-body">AI voice agents with India-tuned voices, call flow builder, analytics, hybrid handoff. Core gap: onboarding and developer experience need investment to match the engine quality.</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">Price</div>
+        <div class="ps-body">Likely usage-based + platform fee. India-market pricing must undercut Twilio/VAPI while protecting margins. Tier structure needed: Starter (solo-founder), Growth (ops team), Enterprise (API).</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">Place</div>
+        <div class="ps-body">Direct web, API, n8n marketplace, Chrome extension. Missing: CRM partner marketplace listings (Freshdesk, Zoho). These are the highest-intent distribution channels for India SMB.</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">Promotion</div>
+        <div class="ps-body">Founder-led content (Joey Dash LinkedIn), product-led demos. Missing: India-language demo videos, vertical-specific case studies (healthcare, D2C), developer community presence on Discord/Twitter.</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">People</div>
+        <div class="ps-body">Small, founder-led team. Every feedback in this teardown is Day-1-intern-executable — no hiring needed for the core ship items. Culture: moves fast, India-native, post-Subspace credibility.</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">Process</div>
+        <div class="ps-body">Trial → flow builder → first call → analytics → iterate. The retention loop is broken between analytics and flow builder (heatmap fix). Onboarding process needs Blueprint Wizard to get users to "first successful call" faster.</div>
+      </div>
+      <div class="ps-cell">
+        <div class="ps-head">Physical Evidence</div>
+        <div class="ps-body">Docs site, dashboard, call recordings, transcript exports. Developer trust signals missing: GitHub repos, changelog, Postman collection, public status page. These are table-stakes for B2B SaaS credibility.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ ROADMAP ═══════════════════ -->
+<div id="roadmap" class="section">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <span class="sec-title">Execution <span>Roadmap</span></span>
+      <span class="sec-pill">ICE-Sequenced · 8 Weeks</span>
+    </div>
+
+    <div class="card" style="margin-bottom:32px;">
+      <div class="card-label">Prioritization Logic</div>
+      <p style="font-size:13px; color:var(--muted);">Ships ordered by ICE score with dependencies considered. F01 (Blueprint Wizard) and F04 (Dev Experience) are week-1 ships because they unblock acquisition. F03 (Handoff Snapshot) is the highest-value retention play but requires CRM webhook work. F05 (Heatmap) is a pure visualization layer on existing data — high impact, low infra risk. F02 (India Sandbox) requires voice model coordination and is placed in week 3.</p>
+    </div>
+
+    <div class="roadmap-row">
+      <div class="rm-week">WEEK 1</div>
+      <div>
+        <div class="rm-title">F01 · Blueprint Recipe Wizard</div>
+        <div class="rm-desc">Build 3 industry templates (D2C, Healthcare, Fintech) as JSON flows. Add 3-step onboarding modal to flow builder. Include "Run Demo Call" CTA per template. Est: 3 days eng, 1 day design.</div>
+        <div style="margin-top:8px;">
+          <span class="pillar-tag pillar-features">Features</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:8px;">Unblocks trial → activation funnel</span>
+        </div>
+      </div>
+      <div class="rm-ice">ICE <strong>504</strong></div>
+    </div>
+
+    <div class="roadmap-row">
+      <div class="rm-week">WEEK 1</div>
+      <div>
+        <div class="rm-title">F04 · Postman Collection + Webhook Echo</div>
+        <div class="rm-desc">Export Postman collection for all public API endpoints. Deploy echo.vocallabs.ai as a simple Node.js event logger (10-min TTL). Add "Run in Postman" button to docs. Create 3 GitHub starter repos. Est: 2 days eng.</div>
+        <div style="margin-top:8px;">
+          <span class="pillar-tag pillar-competitor">Competitor</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:8px;">Closes developer experience gap vs VAPI</span>
+        </div>
+      </div>
+      <div class="rm-ice">ICE <strong>392</strong></div>
+    </div>
+
+    <div class="roadmap-row">
+      <div class="rm-week">WEEK 2</div>
+      <div>
+        <div class="rm-title">F03 · Context Snapshot Widget at Handoff</div>
+        <div class="rm-desc">Define handoff payload schema (intent, entities, emotion, last-30s transcript). Build webhook delivery to Freshdesk + Zoho. Design snapshot card UI for agent screen. Est: 4 days eng, 2 days CRM partner coordination.</div>
+        <div style="margin-top:8px;">
+          <span class="pillar-tag pillar-collab">Potential</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:8px;">Retention + partner distribution play</span>
+        </div>
+      </div>
+      <div class="rm-ice">ICE <strong>432</strong></div>
+    </div>
+
+    <div class="roadmap-row">
+      <div class="rm-week">WEEK 3</div>
+      <div>
+        <div class="rm-title">F02 · India Regional Voice Sandbox</div>
+        <div class="rm-desc">Coordinate 6 voice profiles with voice team. Build India Demo landing page with scenario selector (OTP, Appt, Loan). No sign-up required. Add language toggle to main playground. Est: 3 days eng, 1 week voice QA.</div>
+        <div style="margin-top:8px;">
+          <span class="pillar-tag pillar-gtm">GTM</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:8px;">Activates India-first positioning in demos</span>
+        </div>
+      </div>
+      <div class="rm-ice">ICE <strong>280</strong></div>
+    </div>
+
+    <div class="roadmap-row">
+      <div class="rm-week">WEEK 4</div>
+      <div>
+        <div class="rm-title">F05 · Heatmapped Transcript Overlay in Flow Builder</div>
+        <div class="rm-desc">Aggregate emotion + drop-off data per flow node. Build heatmap ring visualization in flow builder. Link transcript snippets per node. Add "Heatmap mode" toggle. Est: 5 days eng, 2 days design. Requires analytics pipeline join with flow node IDs.</div>
+        <div style="margin-top:8px;">
+          <span class="pillar-tag pillar-ux">UX</span>
+          <span style="font-size:11px; color:var(--muted); margin-left:8px;">Creates PLG retention loop</span>
+        </div>
+      </div>
+      <div class="rm-ice">ICE <strong>336</strong></div>
+    </div>
+
+    <div class="roadmap-row" style="border-bottom:none;">
+      <div class="rm-week">MONTH 2</div>
+      <div>
+        <div class="rm-title">Analytics Dashboard v2 + Changelog</div>
+        <div class="rm-desc">Publish public changelog. Add vertical benchmarks to analytics ("your completion rate vs healthcare average"). Begin Freshdesk partner marketplace listing. Write 2 vertical case studies (D2C + Healthcare) for GTM.</div>
+        <div style="margin-top:8px;">
+          <span style="font-size:11px; color:var(--muted);">Trust + retention foundation</span>
+        </div>
+      </div>
+      <div class="rm-ice" style="color:var(--muted);">ongoing</div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="thesis-box">
+      <p class="thesis-text">The engine is built. The moat is real. Every ship in this roadmap is about <em>making the existing product legible</em> — to the D2C founder evaluating in a 15-minute trial, the developer doing a weekend POC, and the ops head who needs to justify budget. <em>None of this requires a new feature.</em> It requires execution, taste, and someone who treats activation as a product problem, not a marketing one.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <strong>Vocallabs.ai Product Teardown</strong> · Subspace.money Intern Assignment 2026
+  </div>
+  <div>
+    5 Feedbacks · SWOT + Porter's + 7Ps + ICE · Deadline 31 May 2026
+  </div>
+</footer>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
