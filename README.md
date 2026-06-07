@@ -21,7 +21,7 @@ A comprehensive product teardown of Vocallabs.ai with 5 sharp, non-obvious feedb
 ## 📁 Files
 | File | Description |
 |------|-------------|
-| `vocallabs_product_teardown.html` | Full interactive report — open in any browser |
+| `index.html` | Full interactive report — open in any browser |
 | `README.md` | This file |
 
 ## 🚀 How to View
