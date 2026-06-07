@@ -30,7 +30,7 @@ Or view it live via GitHub Pages (see below).
 
 ## 🌐 Live Preview (GitHub Pages)
 > Enable in: Settings → Pages → Source: main branch → `/root` → Save
-> Live at: `https://Mayankkumar47/vocallabs-product-teardown/vocallabs_product_teardown.html`
+> Live at: https://mayankkumar47.github.io/vocallabs-product-teardown/
 
 ## 📌 Assignment Details
 - **Company:** Vocallabs.ai
